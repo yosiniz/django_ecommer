@@ -1,0 +1,108 @@
+{% extends 'store/main.html' %}
+{% load static %}
+{% block content %}
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+<!-- Kategori Seçim Formu -->
+<div class="form-group">
+    <label for="categorySelect">Kategori Seç:</label>
+    <select class="form-control" id="categorySelect">
+        <option value="">Tüm Kategoriler</option>
+        {% for category in categories %}
+            <option value="{{ category.id }}">{{ category.category_name }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+
+<div  class="row" id="productContainer">
+    {% for product in products %}
+        <div class="col-lg-4" data-category="{{ product.category.id }}">
+            <img class="thumbnail" src="{{product.imageURL}}">
+            <div  class="box-element product" data-category="{{ product.category.id }}">
+                <h6 style="        white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 200px" ><strong>{{product.name}}</strong></h6>
+                <hr>
+                <button data-product="{{product.id}}" data-action="add" class="btn btn-outline-secondary add-btn update-cart">Sepete Ekle</button>
+                <a class="btn btn-outline-success" href="{% url 'product_detail' product.id %}">İncele</a>
+                <h4 style="display: inline-block; float: right"><strong>{{product.price|floatformat:2}}TL</strong></h4>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<script>
+    $(document).ready(function() {
+        $("#priceAscBtn").click(function() {
+            sortProducts('asc');
+        });
+
+        $("#priceDescBtn").click(function() {
+            sortProducts('desc');
+        });
+
+        function sortProducts(order) {
+            var productsContainer = $("#productContainer");
+            var products = productsContainer.children().detach();
+
+            products.sort(function(a, b) {
+                var priceA = parseFloat($(a).find('h4 strong').text().replace('$', ''));
+                var priceB = parseFloat($(b).find('h4 strong').text().replace('$', ''));
+
+                if (order === 'asc') {
+                    return priceA - priceB;
+                } else {
+                    return priceB - priceA;
+                }
+            });
+
+            productsContainer.append(products);
+        }
+    });
+	$(document).ready(function() {
+    $(".ara").keyup(function() {
+        var searchText = $(this).val().toLowerCase();
+
+        $("#productContainer div").filter(function() {
+            var productText = $(this).text().toLowerCase();
+            $(this).toggle(productText.indexOf(searchText) > -1);
+        });
+    });
+});
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var productNameElements = document.querySelectorAll('.box-element h6 strong');
+
+        productNameElements.forEach(function(element) {
+            var text = element.textContent;
+            if (text.length > 50) {
+                element.textContent = text.substring(0, 50) + '...';
+            }
+        });
+    });
+</script>
+<script>
+    $(document).ready(function() {
+        $("#categorySelect").change(function() {
+            var selectedCategoryId = $(this).val();
+            filterProductsByCategory(selectedCategoryId);
+        });
+
+        function filterProductsByCategory(categoryId) {
+            $("#productContainer div").show();  // Tüm ürünleri göster
+
+            if (categoryId) {
+                // Eğer bir kategori seçildiyse, seçilmeyen kategorilere ait ürünleri gizle
+                $("#productContainer div").not("[data-category='" + categoryId + "']").hide();
+            }
+        }
+    });
+</script>
+
+
+{% endblock content %}
